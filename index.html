@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>infinity_tech – Computers and digital currency</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-view="home">
+
+<header>
+  <div class="wrap nav">
+    <a href="#top" class="logo"><img src="logo.png" alt="infinity_tech logo">infinity_tech</a>
+    <nav class="links" aria-label="Main"><a href="#shop">Computers</a><a href="#exchange">Digital currency</a><a href="#contact">Support</a></nav>
+    <button class="cart-btn" id="openCart" aria-label="Open cart">Cart<b id="count">0</b></button>
+  </div>
+</header>
+
+<main id="top">
+  <div class="hero" style="--bg:url('banner.jpg')">
+    <div class="bgz" aria-hidden="true"></div><div class="bgcoins" id="bgcoins" aria-hidden="true"></div>
+      <div class="wrap">
+      <h1>Technology that powers <span>the digital future</span></h1>
+      <a class="btn" href="#shop">Shop computers</a><a class="btn ghost" href="#exchange">Buy USDT</a>
+    </div>
+  </div>
+
+  <div class="ticker" aria-label="Demo market prices"><div class="wrap" id="ticker"></div></div>
+
+  <section id="shop">
+    <div class="wrap">
+      <a class="back" href="#top">← Back to home</a>
+      <h2>Computers, ready to ship</h2>
+      <div class="filters" id="filters" role="group" aria-label="Filter products"></div>
+      <div class="grid" id="grid"></div>
+    </div>
+  </section>
+
+  <section id="exchange">
+    <div class="wrap ex">
+      <div>
+        <a class="back" href="#top">← Back to home</a>
+        <h2>Buy USDT</h2>
+        <p class="sub">Enter how many USDT you want to buy and see how much you pay in Tunisian dinars (TND) before you order.</p>
+        <ul class="list">
+          <li><b>Fixed fee of 0.8%</b><span>The fee is included in the amount you see.</span></li>
+          <li><b>Pay with D17</b><span>Tunisian D17 wallet payments are accepted in TND.</span></li>
+        </ul>
+      </div>
+      <div class="box">
+        <div class="row"><input id="amtFrom" type="number" min="0" value="300" aria-label="Amount you enter"><span id="cF" style="font-weight:700;padding:0 8px">USDT</span></div>
+        <div class="dial" id="dial" role="switch" aria-checked="false" aria-label="Switch the currency you enter between USDT and TND" tabindex="0"><span class="dl">Enter USDT</span><span class="dl">Enter TND</span><i class="knob"></i></div>
+        <div id="dlbl" style="text-align:center;color:var(--cyan);margin:8px 0;font-size:14px">You pay</div>
+        <div class="row"><input id="amtTo" type="text" readonly aria-label="Amount you pay or receive"><span id="cT" style="font-weight:700;padding:0 8px">TND</span></div>
+        <p class="rate" id="rate"></p>
+        <div class="row" style="margin-bottom:14px"><input id="wallet" type="text" placeholder="Your wallet address" aria-label="Your wallet address" style="font:500 15px Manrope,sans-serif"></div>
+        <button class="btn" id="exBtn">Buy now</button>
+        <p class="note">Demo rates for this preview. Connect a real price feed before taking payments.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer id="contact"><div class="wrap"><span>© 2026 infinity_tech</span><span>support@infinity_tech_tn</span></div></footer>
+
+<aside class="drawer" id="drawer" aria-label="Cart" aria-hidden="true">
+  <button class="close" id="closeCart" aria-label="Close cart">×</button>
+  <h3>Your cart</h3>
+  <div class="items" id="items"></div>
+  <div class="pay" id="pay" role="group" aria-label="Payment method"></div>
+  <p class="d17" id="d17" hidden><b>Pay with D17</b><br>Open your D17 wallet, choose Send money, enter the number XX XXX XXX and type the total shown below in TND. Your order is confirmed when the payment arrives.</p>
+  <div class="total"><span>Total</span><span id="total">0</span></div>
+  <button class="btn" id="checkout" style="border:0">Check out</button>
+</aside>
+<div class="modal" id="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+  <div class="mbox">
+    <button class="close" id="mClose" aria-label="Close">×</button>
+    <div class="gal"><div class="art mart" id="mArt" title="Click for the next image"></div><div class="thumbs" id="mThumbs"></div><div class="gbtns"><button class="btn ghost" id="mPhoto">Add photos</button><button class="btn ghost" id="mDel" hidden>Remove this photo</button><input type="file" id="mFile" accept="image/*" multiple hidden></div></div>
+    <div class="minfo">
+      <h3 id="mTitle"></h3>
+      <p class="specs" id="mSpecs"></p>
+      <div class="price"><div><b id="mPrice"></b><small id="mBtc"></small></div></div>
+      <ul class="hl" id="mHl"></ul>
+      <h4>Description</h4>
+      <div class="desc" id="mView"></div>
+      <textarea id="mDesc" rows="6" hidden placeholder="Write the description of this product" aria-label="Product description"></textarea>
+      <div class="mbtns"><button class="btn ghost" id="mEdit">Edit description</button><button class="btn" id="mSave" hidden>Save description</button><button class="add" id="mAdd">Add to cart</button></div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
