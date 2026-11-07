@@ -1,18 +1,14 @@
 // Demo rates in Tunisian dinars (TND). 1 USDT = 3.5 TND. Replace BTC with a real price API.
-const RATES = { TND:1, D17:1, BTC:235375, USDT:3.5 };
+const RATES = { TND:1, BTC:235375, USDT:3.5 };
 const products = [
   {id:1,cat:'Laptops',name:'Aero 14 Ultra',specs:'14" OLED · 32 GB RAM · 1 TB SSD',tnd:5250,old:5790,c:['#00E5FF','#7B00FF'],t:'l'},
   {id:2,cat:'Laptops',name:'Forge 16 Pro',specs:'16" 240 Hz · RTX graphics · 32 GB',tnd:7700,c:['#FF36F7','#0066FF'],t:'l'},
   {id:3,cat:'Desktops',name:'Monolith X',specs:'24-core CPU · 64 GB · 2 TB NVMe',tnd:9800,c:['#0066FF','#7B00FF'],t:'d'},
   {id:4,cat:'Desktops',name:'Cube Mini',specs:'Compact · 16 GB · 512 GB SSD',tnd:2600,old:2990,c:['#00E5FF','#0066FF'],t:'m'},
-  {id:5,cat:'Workstations',name:'Atlas Render',specs:'Dual GPU · 128 GB · 4 TB RAID',tnd:20600,c:['#7B00FF','#FF36F7'],t:'w'},
-  {id:6,cat:'Mining and trading',name:'Ledger Rig 6',specs:'6-monitor trading desk · 64 GB',tnd:11550,old:12900,c:['#FF36F7','#00E5FF'],t:'t'},
   {id:7,cat:'Laptops',name:'Aero Air 13',specs:'13.3" · 16 GB · 512 GB SSD',tnd:3490,old:3900,c:['#00E5FF','#FF36F7'],t:'l'},
   {id:8,cat:'Laptops',name:'Blaze 17 Gaming',specs:'17" 360 Hz · RTX · 32 GB',tnd:10400,old:11500,c:['#FF36F7','#7B00FF'],t:'l'},
   {id:9,cat:'Desktops',name:'Titan Tower',specs:'16-core · 32 GB · 1 TB NVMe',tnd:5600,c:['#0066FF','#00E5FF'],t:'d'},
   {id:10,cat:'Desktops',name:'Pocket Mini M2',specs:'Ultra-compact · 8 GB · 256 GB',tnd:1490,old:1750,c:['#7B00FF','#00E5FF'],t:'m'},
-  {id:11,cat:'Workstations',name:'Studio Duo',specs:'Dual Xeon · 256 GB · 8 TB',tnd:28900,c:['#00E5FF','#7B00FF'],t:'w'},
-  {id:12,cat:'Mining and trading',name:'Trader Triple',specs:'3 monitors · 32 GB · 1 TB SSD',tnd:6900,c:['#0066FF','#FF36F7'],t:'t'}
 ];
 const icons = {
   l:'<svg viewBox="0 0 64 44"><rect x="10" y="4" width="44" height="28" rx="3"/><path d="M4 38h56"/></svg>',
@@ -83,10 +79,10 @@ $('#grid').addEventListener('click',e=>{
 
 /* cart */
 function drawCart(){
-  $('#count').textContent = cart.length; $('#d17').hidden = payCur!=='D17';
+  $('#count').textContent = cart.length;
   $('#items').innerHTML = cart.length ? cart.map((p,i)=>`<div class="item"><div><b>${p.name}</b><br><small style="color:var(--muted)">${fmt(p.tnd/RATES[payCur],payCur)}</small></div><button data-i="${i}" aria-label="Remove ${p.name}">Remove</button></div>`).join('')
     : '<p style="color:var(--muted)">Your cart is empty. Add a computer to get started.</p>';
-  $('#pay').innerHTML = ['TND','D17','USDT'].map(c=>`<button data-c="${c}" aria-pressed="${c===payCur}">${c==='TND'?'Card (TND)':c==='D17'?'D17 wallet':c}</button>`).join('');
+  $('#pay').innerHTML = ['TND'].map(c=>`<button data-c="${c}" aria-pressed="${c===payCur}">${c}</button>`).join('');
   $('#total').textContent = fmt(cart.reduce((s,p)=>s+p.tnd,0)/RATES[payCur],payCur);
 }
 $('#items').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;cart.splice(+b.dataset.i,1);drawCart()});
@@ -97,15 +93,19 @@ $('#openCart').onclick=()=>setCart(true); $('#closeCart').onclick=()=>setCart(fa
 document.addEventListener('keydown',e=>{if(e.key==='Escape')setCart(false)});
 $('#checkout').onclick=()=>{
   if(!cart.length) return toast('Add a computer before checking out');
-  toast(payCur==='D17'?'Order received. Send the total with D17 to confirm it.':'Order received. Payment instructions sent by email.'); cart=[]; drawCart(); setCart(false);
+  setCart(false); openContact('Order: '+cart.map(p=>p.name).join(', ')+'. Total: '+$('#total').textContent);
 };
 
 /* exchange */
 let mode='usdt';
 function convert(){
   const a=parseFloat($('#amtFrom').value)||0, r=RATES.USDT;
-  $('#amtTo').value = mode==='usdt' ? (a*r/0.992).toFixed(2) : (a/r*0.992).toFixed(2);
+  $('#amtTo').value = mode==='usdt' ? (a*r).toFixed(2) : (a/r).toFixed(2);
   $('#rate').textContent=`1 USDT = ${r.toFixed(2)} TND`;
+  const u=mode==='usdt'?a:a/r, ok=u>=20;
+  $('#exBtn').disabled=!ok;
+  $('#minNote').style.color=ok?'':'var(--pink)';
+  $('#minNote').textContent=`Minimum purchase: 20 USDT (${(20*r).toFixed(0)} TND)`;
 }
 function setMode(m){
   const carry=$('#amtTo').value; mode=m;
@@ -118,10 +118,10 @@ $('#dial').onclick=()=>setMode(mode==='usdt'?'tnd':'usdt');
 $('#dial').addEventListener('keydown',e=>{if(['Enter',' ','ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();setMode(mode==='usdt'?'tnd':'usdt')}});
 $('#amtFrom').addEventListener('input',convert);
 $('#exBtn').onclick=()=>{
-  const a=parseFloat($('#amtFrom').value)||0, w=$('#wallet').value.trim();
+  const a=parseFloat($('#amtFrom').value)||0;
   if((mode==='usdt'?a:a/RATES.USDT)<20) return toast('The minimum purchase is 20 USDT (70 TND)');
-  if(w.length<20) return toast('Enter a valid wallet address');
-  toast('Order received. Payment details sent by email.');
+  const usdt=mode==='usdt'?a.toFixed(2):$('#amtTo').value, tnd=mode==='usdt'?$('#amtTo').value:a.toFixed(2);
+  openContact('I want to buy '+usdt+' USDT ('+tnd+' TND)');
 };
 
 /* toast */
@@ -130,8 +130,6 @@ let tt; function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('s
 drawTicker(); drawFilters(); drawProducts(); drawCart(); convert();
 
 /* product details and editable description */
-let descs={};
-try{descs=JSON.parse(localStorage.getItem('voltDesc')||'{}')}catch(e){}
 const catDesc={Laptops:'Light enough to carry all day and fast enough for real work. Sharp display, quick storage and a battery built to last through meetings, study and travel.',Desktops:'A dependable machine for the desk. Quiet cooling, room to upgrade and steady performance for work, study and everyday use.',Workstations:'Built for heavy workloads such as 3D rendering, video editing and simulation. Extra cores, large memory and fast storage keep long jobs moving.','Mining and trading':'Made for people who watch the markets. Run several screens at once, keep charts and exchanges open, and stay stable through long sessions.'};
 const defDesc=p=>catDesc[p.cat]||'';
 let photos={}; try{photos=JSON.parse(localStorage.getItem('voltPhotos')||'{}')}catch(e){}
@@ -140,32 +138,34 @@ const okImg=s=>typeof s==='string'&&s.startsWith('data:image/');
 const slides=()=>[0,1,2].map(v=>({t:'svg',v})).concat((photos[cur.id]||[]).filter(okImg).map(s=>({t:'img',s})));
 function showSlide(n){
   const s=slides(); idx=(n+s.length)%s.length; const it=s[idx];
-  $('#mArt').innerHTML = it.t==='svg' ? art(cur,it.v) : `<img class="ph" src="${it.s}" alt="${cur.name} photo">`;
+  $('#mArt').innerHTML=(()=>{
+    const strip=h=>h.replace(/<span class="badge">.*?<\/span>/,'');
+    const face=v=>it.t==='img'?`<img class="ph" src="${it.s}" alt="">`:strip(art(cur,v));
+    const bv=it.t==='svg'?it.v:0;
+    let h=`<div class="l3" style="transform:translateZ(-26px) rotateY(180deg)">${face(2)}</div>`;
+    [-16,-8,0,8,16].forEach(z=>h+=`<div class="l3 mid" style="transform:translateZ(${z}px)">${face(bv)}</div>`);
+    h+=`<div class="l3" style="transform:translateZ(26px)">${face(bv)}</div>`;
+    const badge=cur.old?`<span class="badge">-${Math.round((1-cur.tnd/cur.old)*100)}%</span>`:'';
+    return `<div class="obj3" id="obj3">${h}</div>${badge}`;
+  })(); apply3();
   $('#mThumbs').innerHTML = s.map((x,j)=>`<button class="th${j===idx?' on':''}" data-j="${j}" aria-label="Image ${j+1}">${x.t==='svg'?['Front','Detail','Side'][x.v]:`<img src="${x.s}" alt="">`}</button>`).join('');
-  $('#mDel').hidden = it.t!=='img';
 }
 function shrink(f){return new Promise(res=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,700/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.75))};im.onerror=()=>res(null);im.src=r.result};r.onerror=()=>res(null);r.readAsDataURL(f)})}
 function savePhotos(){try{localStorage.setItem('voltPhotos',JSON.stringify(photos))}catch(e){toast('Photos are shown, but this browser has no room to keep them')}}
-$('#mArt').onclick=()=>showSlide(idx+1);
 $('#mThumbs').addEventListener('click',e=>{const b=e.target.closest('.th');if(b)showSlide(+b.dataset.j)});
-$('#mPhoto').onclick=()=>$('#mFile').click();
-$('#mFile').onchange=async e=>{
-  for(const f of e.target.files){const u=await shrink(f); if(u)(photos[cur.id]=photos[cur.id]||[]).push(u)}
-  e.target.value=''; savePhotos(); showSlide(slides().length-1); toast('Photos added');
-};
-$('#mDel').onclick=()=>{photos[cur.id].splice(idx-3,1);savePhotos();showSlide(0)};
 document.addEventListener('keydown',e=>{if(!modal.classList.contains('open')||e.target.tagName==='TEXTAREA')return;if(e.key==='ArrowRight')showSlide(idx+1);if(e.key==='ArrowLeft')showSlide(idx-1)});
 let cur=null, lastFocus=null;
 const modal=$('#modal');
-function showDesc(){$('#mView').textContent=descs[cur.id]||defDesc(cur)}
+function showDesc(){$('#mView').textContent=defDesc(cur)}
 function openModal(id){
   cur=products.find(x=>x.id==id); if(!cur) return;
   lastFocus=document.activeElement;
+  ry=0; rx=-6; zoom=1; auto=false;
   showSlide(0); $('#mHl').innerHTML=cur.specs.split('·').map(s=>`<li>${s.trim()}</li>`).join('');
   $('#mTitle').textContent=cur.name; $('#mSpecs').textContent=cur.specs;
   $('#mPrice').textContent=fmt(cur.tnd,'TND');
   $('#mBtc').textContent='';
-  showDesc(); $('#mView').hidden=false; $('#mDesc').hidden=true; $('#mSave').hidden=true; $('#mEdit').hidden=false;
+  showDesc();
   modal.classList.add('open'); modal.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden';
   $('#mClose').focus();
 }
@@ -177,17 +177,6 @@ $('#mClose').onclick=closeModal;
 modal.addEventListener('click',e=>{if(e.target===modal)closeModal()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))closeModal()});
 $('#grid').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.classList.contains('card'))openModal(e.target.dataset.id)});
-$('#mEdit').onclick=()=>{
-  $('#mDesc').value=descs[cur.id]||''; $('#mView').hidden=true; $('#mDesc').hidden=false;
-  $('#mEdit').hidden=true; $('#mSave').hidden=false; $('#mDesc').focus();
-};
-$('#mSave').onclick=()=>{
-  const v=$('#mDesc').value.trim();
-  if(v) descs[cur.id]=v; else delete descs[cur.id];
-  try{localStorage.setItem('voltDesc',JSON.stringify(descs))}catch(e){toast('Could not save in this browser');}
-  showDesc(); $('#mView').hidden=false; $('#mDesc').hidden=true; $('#mSave').hidden=true; $('#mEdit').hidden=false;
-  toast('Description saved');
-};
 $('#mAdd').onclick=()=>{
   cart.push(cur); drawCart(); toast(cur.name+' added to cart');
   const c=$('#count'); c.classList.remove('bump'); void c.offsetWidth; c.classList.add('bump');
@@ -197,14 +186,14 @@ $('#mAdd').onclick=()=>{
 /* pages: home banner, shop page, USDT page */
 function route(){
   const h=location.hash.slice(1);
-  const v=h==='shop'?'shop':h==='exchange'?'exchange':'home';
+  const v=h==='shop'?'shop':h==='exchange'?'exchange':h==='support'?'support':'home';
   document.body.dataset.view=v;
   if(h==='contact'){const f=document.getElementById('contact'); if(f) f.scrollIntoView(); return}
   window.scrollTo(0,0);
 }
 document.querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener('click',e=>{
   const h=a.getAttribute('href').slice(1);
-  if(!['top','shop','exchange','contact'].includes(h)) return;
+  if(!['top','shop','exchange','support','contact'].includes(h)) return;
   e.preventDefault(); location.hash=h; route();
 }));
 window.addEventListener('hashchange',route);
@@ -228,6 +217,78 @@ route();
     bg.style.setProperty('--rx','0deg'); bg.style.setProperty('--ry','0deg');
   });
 })();
+
+/* contact window: Gmail and Instagram */
+const CONTACT={mail:'infinitytech707@gmail.com',insta:'infinity_tech_tn',dmUrl:'https://ig.me/m/infinity_tech_tn',instaUrl:'https://www.instagram.com/infinity_tech_tn?utm_source=ig_web_button_share_sheet&cplk=ZDNlZDc0MzIxNw=='};
+const cm=$('#cmodal');
+function openContact(summary,title,note,subject){
+  $('#cSum').textContent=summary;
+  $('#cTitle').textContent=title||'Complete your order';
+  $('#cNote').textContent=note===undefined?'Contact us with your order and we will confirm it with you.':note;
+  $('#cNote').hidden=!$('#cNote').textContent;
+  $('#cInstaCard').hidden=(subject==='Support message');
+  $('#cMailTxt').textContent=CONTACT.mail; $('#cInstaTxt').textContent='@'+CONTACT.insta;
+  $('#cMailBtn').href='https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(CONTACT.mail)+'&su='+encodeURIComponent(subject||'New order')+'&body='+encodeURIComponent(summary);
+  $('#cInstaBtn').href=CONTACT.dmUrl;
+  cm.classList.add('open'); cm.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; $('#cClose').focus();
+}
+function closeContact(){cm.classList.remove('open'); cm.setAttribute('aria-hidden','true'); document.body.style.overflow=''}
+$('#cClose').onclick=closeContact;
+function copyText(t){
+  const fb=()=>{const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0';document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}a.remove()};
+  try{navigator.clipboard.writeText(t).catch(fb)}catch(e){fb()}
+}
+$('#cInstaBtn').addEventListener('click',()=>{copyText($('#cSum').textContent);toast('Message copied. Paste it in the Instagram chat.')});
+cm.addEventListener('click',e=>{if(e.target===cm)closeContact()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&cm.classList.contains('open'))closeContact()});
+document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{
+  const v=b.dataset.copy==='mail'?CONTACT.mail:'@'+CONTACT.insta;
+  try{await navigator.clipboard.writeText(v);toast('Copied')}catch(e){toast(v)}
+});
+
+/* rotate 360 and zoom inside the product window */
+let ry=0, rx=-6, zoom=1, auto=false, pinch0=0, zoom0=1;
+const pts=new Map();
+function apply3(){
+  const o=$('#obj3'); if(!o) return;
+  o.style.setProperty('--ry3',ry+'deg'); o.style.setProperty('--rx3',rx+'deg'); o.style.setProperty('--zoom',zoom);
+  $('#zRange').value=Math.round(zoom*100);
+}
+function setZoom(z){auto=false; zoom=Math.min(2.6,Math.max(.6,z)); apply3()}
+const art3=$('#mArt');
+art3.addEventListener('pointerdown',e=>{
+  auto=false; art3.setPointerCapture(e.pointerId); pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pts.size===2){const [a,b]=[...pts.values()]; pinch0=Math.hypot(a.x-b.x,a.y-b.y); zoom0=zoom}
+});
+art3.addEventListener('pointermove',e=>{
+  const p=pts.get(e.pointerId); if(!p) return;
+  if(pts.size===2){
+    p.x=e.clientX; p.y=e.clientY;
+    const [a,b]=[...pts.values()]; setZoom(zoom0*Math.hypot(a.x-b.x,a.y-b.y)/(pinch0||1)); return;
+  }
+  ry+=(e.clientX-p.x)*.7; rx=Math.max(-35,Math.min(35,rx-(e.clientY-p.y)*.4));
+  p.x=e.clientX; p.y=e.clientY; apply3();
+});
+['pointerup','pointercancel','pointerleave'].forEach(t=>art3.addEventListener(t,e=>{pts.delete(e.pointerId)}));
+art3.addEventListener('wheel',e=>{e.preventDefault(); setZoom(zoom*(e.deltaY<0?1.1:.9))},{passive:false});
+$('#zIn').onclick=()=>setZoom(zoom*1.2);
+$('#zOut').onclick=()=>setZoom(zoom/1.2);
+$('#zRange').oninput=e=>setZoom(e.target.value/100);
+$('#zReset').onclick=()=>{auto=false; ry=0; rx=-6; zoom=1; apply3()};
+(function spin(){
+  if(auto && !pts.size && modal.classList.contains('open')){ry+=.35; apply3()}
+  requestAnimationFrame(spin);
+})();
+
+/* support page */
+$('#sMail').textContent=CONTACT.mail;
+$('#sInsta').href=CONTACT.instaUrl; $('#sInsta').textContent='@'+CONTACT.insta;
+$('#sSend').onclick=()=>{
+  const n=$('#sName').value.trim(), e=$('#sEmail').value.trim(), p=$('#sPhone').value.trim(), m=$('#sMsg').value.trim();
+  if(!n||!m) return toast('Please enter your name and message');
+  if(e&&!/^\S+@\S+\.\S+$/.test(e)) return toast('Enter a valid email address');
+  openContact('Name: '+n+'\nEmail: '+(e||'-')+'\nPhone: '+(p||'-')+'\nMessage: '+m,'Send your message','','Support message');
+};
 
 /* 3D tilt on cards */
 if(matchMedia('(hover:hover)').matches && !matchMedia('(prefers-reduced-motion:reduce)').matches){
