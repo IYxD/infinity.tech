@@ -230,7 +230,9 @@ function openContact(summary,title,note,subject){
   $('#cMailTxt').textContent=CONTACT.mail; $('#cInstaTxt').textContent='@'+CONTACT.insta;
   const subj=encodeURIComponent(subject||'New order'), body=encodeURIComponent(summary);
   const webUrl='https://mail.google.com/mail/u/0/?fs=1&to='+encodeURIComponent(CONTACT.mail)+'&su='+subj+'&body='+body+'&tf=cm';
-  $('#cMailBtn').href=webUrl;
+  const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  $('#cMailBtn').href = isMobile ? 'mailto:'+CONTACT.mail+'?subject='+subj+'&body='+body : webUrl;
+  $('#cMailBtn').dataset.mobile = isMobile ? '1' : '';
   $('#cInstaBtn').href=CONTACT.dmUrl;
   cm.classList.add('open'); cm.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; $('#cClose').focus();
 }
@@ -241,6 +243,7 @@ function copyText(t){
   try{navigator.clipboard.writeText(t).catch(fb)}catch(e){fb()}
 }
 $('#cInstaBtn').addEventListener('click',()=>{copyText($('#cSum').textContent);toast('Message copied. Paste it in the Instagram chat.')});
+$('#cMailBtn').addEventListener('click',()=>{if($('#cMailBtn').dataset.mobile){copyText($('#cSum').textContent);toast('If your mail app does not open, the message is copied. Just paste it.')}});
 cm.addEventListener('click',e=>{if(e.target===cm)closeContact()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&cm.classList.contains('open'))closeContact()});
 document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{
