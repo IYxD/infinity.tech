@@ -229,7 +229,10 @@ function openContact(summary,title,note,subject){
   $('#cInstaCard').hidden=(subject==='Support message');
   $('#cMailTxt').textContent=CONTACT.mail; $('#cInstaTxt').textContent='@'+CONTACT.insta;
   const subj=encodeURIComponent(subject||'New order'), body=encodeURIComponent(summary);
-  $('#cMailBtn').href='https://mail.google.com/mail/u/0/?fs=1&to='+encodeURIComponent(CONTACT.mail)+'&su='+subj+'&body='+body+'&tf=cm';
+  const webUrl='https://mail.google.com/mail/u/0/?fs=1&to='+encodeURIComponent(CONTACT.mail)+'&su='+subj+'&body='+body+'&tf=cm';
+  const isIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  $('#cMailBtn').href = isIOS ? 'googlegmail:///co?to='+encodeURIComponent(CONTACT.mail)+'&subject='+subj+'&body='+body : webUrl;
+  $('#cMailWeb').href=webUrl; $('#cMailWeb').hidden=!isIOS;
   $('#cInstaBtn').href=CONTACT.dmUrl;
   cm.classList.add('open'); cm.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; $('#cClose').focus();
 }
