@@ -228,7 +228,11 @@ function openContact(summary,title,note,subject){
   $('#cNote').hidden=!$('#cNote').textContent;
   $('#cInstaCard').hidden=(subject==='Support message');
   $('#cMailTxt').textContent=CONTACT.mail; $('#cInstaTxt').textContent='@'+CONTACT.insta;
-  $('#cMailBtn').href='https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(CONTACT.mail)+'&su='+encodeURIComponent(subject||'New order')+'&body='+encodeURIComponent(summary);
+  const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||matchMedia('(pointer:coarse)').matches;
+  const subj=encodeURIComponent(subject||'New order'), body=encodeURIComponent(summary);
+  $('#cMailBtn').href = isMobile
+    ? 'mailto:'+CONTACT.mail+'?subject='+subj+'&body='+body
+    : 'https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(CONTACT.mail)+'&su='+subj+'&body='+body;
   $('#cInstaBtn').href=CONTACT.dmUrl;
   cm.classList.add('open'); cm.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; $('#cClose').focus();
 }
@@ -242,7 +246,7 @@ $('#cInstaBtn').addEventListener('click',()=>{copyText($('#cSum').textContent);t
 cm.addEventListener('click',e=>{if(e.target===cm)closeContact()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&cm.classList.contains('open'))closeContact()});
 document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{
-  const v=b.dataset.copy==='mail'?CONTACT.mail:'@'+CONTACT.insta;
+  const v=b.dataset.copy==='mail'?CONTACT.mail:b.dataset.copy==='msg'?$('#cSum').textContent:'@'+CONTACT.insta;
   try{await navigator.clipboard.writeText(v);toast('Copied')}catch(e){toast(v)}
 });
 
